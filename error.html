@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error 500</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0c;
+            --panel-color: #141417;
+            --accent-blue: #1d4ed8;
+            --accent-glow: rgba(29, 78, 216, 0.15);
+            --text-color: #e4e4e7;
+            --text-muted: #71717a;
+            --border-color: #27272a;
+            --error-red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 24px;
+        }
+
+        .error-card {
+            background-color: var(--panel-color);
+            border: 1px solid var(--border-color);
+            border-top: 3px solid var(--error-red);
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            z-index: 2;
+        }
+
+        .error-icon {
+            font-size: 3rem;
+            color: var(--error-red);
+            margin-bottom: 16px;
+        }
+
+        .error-title {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+
+        .error-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .info-box {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 0.8rem;
+            font-family: monospace;
+            color: var(--text-muted);
+            text-align: left;
+            margin-bottom: 24px;
+        }
+
+        .btn-retry {
+            display: inline-block;
+            background-color: var(--accent-blue);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s;
+        }
+
+        .btn-retry:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="error-card">
+        <div class="error-icon">⚠️</div>
+        <h1 class="error-title">HTTP 500 Internal Server Error</h1>
+      
+        
+        <div class="info-box">
+            • Check Wisp Server<br>
+            • Verify that you are connected to the Internet<br>
+            • Check if the website you entered is valid.
+        </div>
+
+        <button class="btn-retry" onclick="window.parent.location.reload();">Reload Workspace</button>
+    </div>
+
+</body>
+</html>
