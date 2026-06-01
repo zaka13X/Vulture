@@ -242,7 +242,6 @@
     <canvas id="particle-canvas"></canvas>
 
     <div class="browser-container">
-        <!-- Navigation Controls -->
         <nav class="nav-bar">
             <div class="nav-buttons">
                 <button class="nav-btn" id="back-btn">←</button>
@@ -258,7 +257,6 @@
             <button class="nav-btn" id="settings-btn">⚙</button>
         </nav>
 
-        <!-- Web Content Display -->
         <main class="content-area">
             <div class="new-tab-screen" id="dashboard">
                 <h1 class="brand-title">Vulture</h1>
@@ -267,13 +265,12 @@
             <iframe id="browser-viewport" class="tab-view" src="about:blank"></iframe>
         </main>
     </div>
-        <!-- Configuration Modal -->
-    <div class="overlay" id="modal-overlay"></div>
+        <div class="overlay" id="modal-overlay"></div>
     <div class="modal" id="settings-modal">
         <h2 class="modal-header">Vulture Configuration</h2>
         <div class="form-group">
             <label for="wisp-url">Wisp Server Endpoint (WebSocket)</label>
-            <input type="text" id="wisp-url" class="form-input" placeholder="wss://example.com">
+            <input type="text" id="wisp-url" class="form-input" placeholder="wss://://example.com">
         </div>
         <div class="modal-buttons">
             <button class="btn btn-secondary" id="settings-close">Cancel</button>
@@ -281,11 +278,7 @@
         </div>
     </div>
 
-    <!-- Corrected CDN Script Injection Engine -->
-    <script src="https://jsdelivr.net" defer></script>
-
     <script>
-        // DOM Element Declarations
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         const dashboard = document.getElementById('dashboard');
@@ -302,11 +295,41 @@
         const settingsClose = document.getElementById('settings-close');
         const settingsSave = document.getElementById('settings-save');
 
-        // State variables
-        let currentWispServer = localStorage.getItem('vulture_wisp_server') || 'wss://example.com';
+        let currentWispServer = localStorage.getItem('vulture_wisp_server') || 'wss://://example.com';
         let historyStack = [];
         let historyIndex = -1;
         let particles = [];
+
+        // 1. Service Worker Initialization Engine
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    // Registers your standalone worker.js module file in the root scope
+                    const registration = await navigator.serviceWorker.register('./worker.js', { scope: './' });
+                    console.log('Vulture Network Service Worker mapped successfully:', registration.scope);
+                    
+                    // Synchronize the current Wisp configuration endpoint down to the running worker thread
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({
+                            type: 'SET_WISP_SERVER',
+                            url: currentWispServer
+                        });
+                    }
+                } catch (error) {
+                    console.error('Service Worker baseline installation dropped:', error);
+                }
+            });
+
+            // Handle spontaneous re-controllers
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        type: 'SET_WISP_SERVER',
+                        url: currentWispServer
+                    });
+                }
+            });
+        }
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -349,10 +372,7 @@
 
         function animateParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
+            particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animateParticles);
         }
         initParticles();
@@ -366,54 +386,15 @@
                 targetUrl = 'https://' + targetUrl;
             }
 
-            // INSTANT VISIBILITY SWAP: Force the viewport directly on top immediately
             dashboard.style.display = 'none';
             viewport.style.display = 'block';
             urlField.value = targetUrl;
 
-            try {
-                console.log("Checking for global libcurl environment status...");
-                
-                // Confirm that the script window loaded the global libcurl context cleanly
-                if (typeof libcurl !== 'undefined') {
-                    await libcurl.load_wasm("https://jsdelivr.net");
-                    
-                    const response = await libcurl.fetch(targetUrl, {
-                        method: 'GET',
-                        wisp: currentWispServer,
-                        redirect: 'follow'
-                    });
-
-                    if (response && response.status >= 200 && response.status < 400) {
-                        const blobData = await response.blob();
-                        viewport.src = URL.createObjectURL(blobData);
-                        trackHistory(targetUrl);
-                        updateNavButtons();
-                        return;
-                    }
-                }
-                throw new Error("Target framework component missing or network execution aborted.");
-            } catch (error) {
-                console.warn('Primary execution pipeline dropped, initiating dynamic proxy failover layout:', error.message);
-                
-                try {
-                    // STANDALONE FAILOVER ROUTINE: Uses a standard public CORS proxy pipeline to verify visibility
-                    const proxyUrl = `https://allorigins.win{encodeURIComponent(targetUrl)}`;
-                    const fallbackResponse = await fetch(proxyUrl);
-                    
-                    if (fallbackResponse.ok) {
-                        const textData = await fallbackResponse.text();
-                        const blob = new Blob([textData], { type: 'text/html' });
-                        viewport.src = URL.createObjectURL(blob);
-                    } else {
-                        throw new Error();
-                    }
-                } catch (fallbackError) {
-                    // If everything fails completely, route cleanly to your error page
-                    viewport.src = 'error.html';
-                }
-                trackHistory(targetUrl);
-            }
+            // Structure the target request context path through our registered Service Worker scope prefix
+            const proxyScopedUrl = `./vulture-service/${btoa(targetUrl)}`;
+            viewport.src = proxyScopedUrl;
+            
+            trackHistory(targetUrl);
             updateNavButtons();
         }
 
@@ -425,18 +406,13 @@
             }
         }
 
-        // Navigation History Sync Functions
         function updateNavButtons() {
             backBtn.style.opacity = historyIndex > 0 ? '1' : '0.4';
             forwardBtn.style.opacity = historyIndex < historyStack.length - 1 ? '1' : '0.4';
         }
 
-        // Event Interceptors
         urlField.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                console.log("Enter key registered.");
-                navigate(urlField.value);
-            }
+            if (e.key === 'Enter') navigate(urlField.value);
         });
 
         refreshBtn.addEventListener('click', () => {
@@ -464,7 +440,6 @@
             urlField.value = '';
         });
 
-        // Settings Modal Bindings
         settingsBtn.addEventListener('click', () => {
             wispInput.value = currentWispServer;
             settingsModal.style.display = 'block';
@@ -483,6 +458,13 @@
             currentWispServer = wispInput.value;
             localStorage.setItem('vulture_wisp_server', currentWispServer);
             closeSettings();
+            
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'SET_WISP_SERVER',
+                    url: currentWispServer
+                });
+            }
             if (historyIndex >= 0) navigate(historyStack[historyIndex]);
         });
 
