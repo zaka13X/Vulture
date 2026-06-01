@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulture Workspace</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0c;
+            --panel-color: #141417;
+            --accent-blue: #1d4ed8;
+            --accent-glow: rgba(29, 78, 216, 0.15);
+            --text-color: #e4e4e7;
+            --text-muted: #71717a;
+            --border-color: #27272a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .browser-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            z-index: 2;
+            position: relative;
+        }
+
+        /* Top Navigation Bar */
+        .nav-bar {
+            background-color: var(--panel-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 16px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--border-color);
+        }
+
+        .url-bar-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 4px 8px;
+        }
+
+        .url-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 14px;
+            outline: none;
+            padding: 4px;
+        }
+
+        /* Viewport Area */
+        .content-area {
+            flex-grow: 1;
+            position: relative;
+            background-color: var(--bg-color);
+        }
+
+        .tab-view {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        .tab-view.active {
+            display: block;
+        }
+
+        /* New Tab Dashboard */
+        .new-tab-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+        }
+
+        .brand-title {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        /* Settings Overlay */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--panel-color);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 24px;
+            z-index: 100;
+            width: 90%;
+            max-width: 450px;
+        }
+
+        .modal-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-color);
+            padding: 10px;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 99;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="browser-container">
+        <!-- Navigation Controls -->
+        <nav class="nav-bar">
+            <div class="nav-buttons">
+                <button class="nav-btn" id="back-btn">←</button>
+                <button class="nav-btn" id="forward-btn">→</button>
+                <button class="nav-btn" id="home-btn">⌂</button>
+            </div>
+            
+            <div class="url-bar-container">
+                <input type="text" class="url-input" id="url-field" placeholder="Search or enter web address...">
+                <button class="nav-btn" id="refresh-btn">⟳</button>
+            </div>
+
+            <button class="nav-btn" id="settings-btn">⚙</button>
+        </nav>
+
+        <!-- Web Content Display -->
+        <main class="content-area">
+            <div class="new-tab-screen" id="dashboard">
+                <h1 class="brand-title">Vulture</h1>
+                <p class="brand-subtitle">Fly over to the free Internet!, made by zaka13</p>
+            </div>
+            <iframe id="browser-viewport" class="tab-view" src="about:blank"></iframe>
+        </main>
+    </div>
+        <!-- Configuration Modal -->
+    <div class="overlay" id="modal-overlay"></div>
+    <div class="modal" id="settings-modal">
+        <h2 class="modal-header">Vulture Configuration</h2>
+        <div class="form-group">
+            <label for="wisp-url">Wisp Server Endpoint (WebSocket)</label>
+            <input type="text" id="wisp-url" class="form-input" placeholder="wss://example.com">
+        </div>
+        <div class="modal-buttons">
+            <button class="btn btn-secondary" id="settings-close">Cancel</button>
+            <button class="btn btn-primary" id="settings-save">Save changes</button>
+        </div>
+    </div>
+
+    <!-- Script Execution Block -->
+    <script type="module">
+        // DOM Element Declarations
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        const dashboard = document.getElementById('dashboard');
+        const viewport = document.getElementById('browser-viewport');
+        const urlField = document.getElementById('url-field');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const backBtn = document.getElementById('back-btn');
+        const forwardBtn = document.getElementById('forward-btn');
+        const homeBtn = document.getElementById('home-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const wispInput = document.getElementById('wisp-url');
+        const settingsClose = document.getElementById('settings-close');
+        const settingsSave = document.getElementById('settings-save');
+
+        // State variables
+        let currentWispServer = localStorage.getItem('vulture_wisp_server') || 'wss://example.com';
+        let historyStack = [];
+        let historyIndex = -1;
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+                this.color = `rgba(29, 78, 216, ${Math.random() * 0.4 + 0.1})`;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 60; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        initParticles();
+        animateParticles();
+
+        // Browser Navigation Operations
+        async function navigate(targetUrl) {
+            if (!targetUrl) return;
+            
+            // Format URL structures cleanly
+            if (!/^https?:\/\//i.test(targetUrl)) {
+                targetUrl = 'https://' + targetUrl;
+            }
+
+            dashboard.style.display = 'none';
+            viewport.style.display = 'block';
+            urlField.value = targetUrl;
+
+            try {
+                console.log("Attempting network connection via CDN script wrapper...");
+                
+                // Dynamically try to pull libcurl.js from CDN path requirements
+                const module = await import('https://unpkg.com').catch(() => null);
+                
+                if (module && module.Libcurl) {
+                    const curl = new module.Libcurl({ wasmPath: 'https://unpkg.com' });
+                    await curl.connectWisp(currentWispServer);
+                    
+                    const response = await curl.fetch(targetUrl, { method: 'GET', redirect: 'follow' });
+                    if (response.status >= 200 && response.status < 400) {
+                        const blobData = await response.blob();
+                        viewport.src = URL.createObjectURL(blobData);
+                        trackHistory(targetUrl);
+                        updateNavButtons();
+                        return; // Successfully rendered blob, terminate execution
+                    }
+                }
+                throw new Error("Libcurl components unreadable or pipeline initialization aborted.");
+            } catch (error) {
+                console.error('Proxy routing layer dropped:', error.message);
+                
+                // Fixed: If proxy fetch fails, instantly fall back to your custom local error page
+                viewport.src = 'error.html'; 
+                trackHistory(targetUrl);
+            }
+            updateNavButtons();
+        }
+
+        function trackHistory(url) {
+            if (historyIndex === -1 || historyStack[historyIndex] !== url) {
+                historyStack.splice(historyIndex + 1);
+                historyStack.push(url);
+                historyIndex++;
+            }
+        }
+
+        function updateNavButtons() {
+            backBtn.style.opacity = historyIndex > 0 ? '1' : '0.4';
+            forwardBtn.style.opacity = historyIndex < historyStack.length - 1 ? '1' : '0.4';
+        }
+
+        // Event Interceptors
+        urlField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                console.log("Enter key intercepted. Dispatching navigation request...");
+                navigate(urlField.value);
+            }
+        });
+
+        refreshBtn.addEventListener('click', () => {
+            if (historyIndex >= 0) navigate(historyStack[historyIndex]);
+        });
+
+        backBtn.addEventListener('click', () => {
+            if (historyIndex > 0) {
+                historyIndex--;
+                navigate(historyStack[historyIndex]);
+            }
+        });
+
+        forwardBtn.addEventListener('click', () => {
+            if (historyIndex < historyStack.length - 1) {
+                historyIndex++;
+                navigate(historyStack[historyIndex]);
+            }
+        });
+
+        homeBtn.addEventListener('click', () => {
+            viewport.src = 'about:blank';
+            viewport.style.display = 'none';
+            dashboard.style.display = 'flex';
+            urlField.value = '';
+        });
+
+        // Settings View Model Bindings
+        settingsBtn.addEventListener('click', () => {
+            wispInput.value = currentWispServer;
+            settingsModal.style.display = 'block';
+            modalOverlay.style.display = 'block';
+        });
+
+        function closeSettings() {
+            settingsModal.style.display = 'none';
+            modalOverlay.style.display = 'none';
+        }
+
+        settingsClose.addEventListener('click', closeSettings);
+        modalOverlay.addEventListener('click', closeSettings);
+
+        settingsSave.addEventListener('click', () => {
+            currentWispServer = wispInput.value;
+            localStorage.setItem('vulture_wisp_server', currentWispServer);
+            closeSettings();
+            if (historyIndex >= 0) navigate(historyStack[historyIndex]);
+        });
+
+        updateNavButtons();
+    </script>
+</body>
+</html>
