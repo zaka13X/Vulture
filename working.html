@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulture Workspace</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0c;
+            --panel-color: #141417;
+            --accent-blue: #1d4ed8;
+            --accent-glow: rgba(29, 78, 216, 0.15);
+            --text-color: #e4e4e7;
+            --text-muted: #71717a;
+            --border-color: #27272a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .browser-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            z-index: 2;
+            position: relative;
+        }
+
+        /* Top Navigation Bar */
+        .nav-bar {
+            background-color: var(--panel-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 16px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--border-color);
+        }
+
+        .url-bar-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 4px 8px;
+        }
+
+        .url-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 14px;
+            outline: none;
+            padding: 4px;
+        }
+
+        /* Viewport Area */
+        .content-area {
+            flex-grow: 1;
+            position: relative;
+            background-color: var(--bg-color);
+        }
+
+        .tab-view {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        .tab-view.active {
+            display: block;
+        }
+
+        /* New Tab Dashboard */
+        .new-tab-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+        }
+
+        .brand-title {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        /* Settings Overlay Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--panel-color);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 24px;
+            z-index: 100;
+            width: 90%;
+            max-width: 450px;
+        }
+
+        .modal-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            color: var(--text-color);
+            font-size: 14px;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 99;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="browser-container">
+        <!-- Top Toolbar -->
+        <div class="nav-bar">
+            <div class="nav-buttons">
+                <button class="nav-btn" id="back-btn">←</button>
+                <button class="nav-btn" id="forward-btn">→</button>
+                <button class="nav-btn" id="reload-btn">↻</button>
+            </div>
+            <div class="url-bar-container">
+                <input type="text" class="url-input" id="address-bar" placeholder="Enter URL or search term...">
+            </div>
+            <button class="nav-btn" id="settings-btn">⚙️</button>
+        </div>
+
+        <!-- Working Viewport Content Screen -->
+        <div class="content-area">
+            <!-- New Tab Screen Dashboard -->
+            <div class="new-tab-screen" id="dashboard">
+                <h1 class="brand-title">Vulture</h1>
+                <div class="brand-subtitle">Workspace Engine</div>
+            </div>
+
+            <!-- Dynamic Proxied Webpage Viewport -->
+            <iframe class="tab-view" id="proxy-viewport"></iframe>
+        </div>
+    </div>
+
+    <!-- Network Configuration Modal -->
+    <div class="overlay" id="modal-overlay"></div>
+    <div class="modal" id="settings-modal">
+        <div class="modal-header">Network Tunnel Settings</div>
+        <div class="form-group">
+            <label for="wisp-input">WISP WEBSEOCKET ENDPOINT (WSS://)</label>
+            <input type="text" id="wisp-input" class="form-input" placeholder="wss://://your-wisp-server.com">
+        </div>
+        <div class="modal-buttons">
+            <button class="btn btn-secondary" id="close-modal">Cancel</button>
+            <button class="btn btn-primary" id="save-settings">Save Routing</button>
+        </div>
+    </div>
+            urlField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                let input = urlField.value.trim();
+                if (!input) return;
+
+                // If it doesn't contain a dot or spaces, treat it as a web search
+                if (!input.includes('.') || input.includes(' ')) {
+                    input = 'https://duckduckgo.com' + encodeURIComponent(input);
+                }
+                navigate(input);
+            }
+        });
+
+        // Navigation controls
+        refreshBtn.addEventListener('click', () => {
+            if (viewport.style.display === 'block') {
+                viewport.contentWindow.location.reload();
+            }
+        });
+
+        backBtn.addEventListener('click', () => {
+            if (historyIndex > 0) {
+                historyIndex--;
+                const prevUrl = historyStack[historyIndex];
+                urlField.value = prevUrl;
+                viewport.src = `./vulture-service/${btoa(prevUrl)}`;
+                updateNavButtons();
+            }
+        });
+
+        forwardBtn.addEventListener('click', () => {
+            if (historyIndex < historyStack.length - 1) {
+                historyIndex++;
+                const nextUrl = historyStack[historyIndex];
+                urlField.value = nextUrl;
+                viewport.src = `./vulture-service/${btoa(nextUrl)}`;
+                updateNavButtons();
+            }
+        });
+
+        homeBtn.addEventListener('click', () => {
+            viewport.style.display = 'none';
+            dashboard.style.display = 'flex';
+            urlField.value = '';
+            viewport.src = 'about:blank';
+        });
+
+        // Settings Menu Interactions
+        settingsBtn.addEventListener('click', () => {
+            wispInput.value = currentWispServer;
+            settingsModal.style.display = 'block';
+            modalOverlay.style.display = 'block';
+        });
+
+        function closeModal() {
+            settingsModal.style.display = 'none';
+            modalOverlay.style.display = 'none';
+        }
+
+        settingsClose.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', closeModal);
+
+        settingsSave.addEventListener('click', () => {
+            let newWisp = wispInput.value.trim();
+            if (newWisp) {
+                // Automatically fix missing ws/wss protocols
+                if (!newWisp.startsWith('ws://') && !newWisp.startsWith('wss://')) {
+                    newWisp = 'wss://' + newWisp;
+                }
+                
+                currentWispServer = newWisp;
+                localStorage.setItem('vulture_wisp_server', currentWispServer);
+                
+                // Broadcast updated configuration downstream to our service worker right away
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        type: 'SET_WISP_SERVER',
+                        url: currentWispServer
+                    });
+                    alert('WISP Tunnel configuration synchronized successfully!');
+                } else {
+                    alert('Configuration saved! Please reload the page to initialize the background worker.');
+                }
+            }
+            closeModal();
+        });
+    </script>
+</body>
+</html>
