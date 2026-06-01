@@ -273,7 +273,7 @@
         <h2 class="modal-header">Vulture Configuration</h2>
         <div class="form-group">
             <label for="wisp-url">Wisp Server Endpoint (WebSocket)</label>
-            <input type="text" id="wisp-url" class="form-input" placeholder="wss://example.com">
+            <input type="text" id="wisp-url" class="form-input" placeholder="wss://wisp.mercurywork.shop">
         </div>
         <div class="modal-buttons">
             <button class="btn btn-secondary" id="settings-close">Cancel</button>
@@ -284,7 +284,7 @@
     <!-- Script Execution Block -->
     <script type="module">
         // Import libcurl.js runtime scripts from the absolute root path directory
-        import { Libcurl } from '/libcurl.js';
+        import { Libcurl } from './libcurl.js';
 
         // DOM Element Declarations
         const canvas = document.getElementById('particle-canvas');
@@ -304,7 +304,7 @@
         const settingsSave = document.getElementById('settings-save');
 
         // State variables
-        let currentWispServer = localStorage.getItem('vulture_wisp_server') || 'wss://example.com';
+        let currentWispServer = localStorage.getItem('vulture_wisp_server') || 'wss://wisp.mercurywork.shop';
         let historyStack = [];
         let historyIndex = -1;
         let particles = [];
@@ -374,7 +374,7 @@
 
             try {
                 // Initialize the libcurl instance pointing to the root WebAssembly asset directory path
-                const curl = new Libcurl({ wasmPath: '/libcurl.wasm' });
+                const curl = new Libcurl({ wasmPath: './libcurl.wasm' });
                 
                 // Establish connection topology via configured WebSocket Wisp server
                 await curl.connectWisp(currentWispServer);
