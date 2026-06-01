@@ -273,7 +273,7 @@
         <h2 class="modal-header">Vulture Configuration</h2>
         <div class="form-group">
             <label for="wisp-url">Wisp Server Endpoint (WebSocket)</label>
-            <input type="text" id="wisp-url" class="form-input" placeholder="wss://example.com">
+            <input type="text" id="wisp-url" class="form-input" placeholder="wss://wisp.mercurywork.shop">
         </div>
         <div class="modal-buttons">
             <button class="btn btn-secondary" id="settings-close">Cancel</button>
@@ -284,7 +284,7 @@
     <!-- Script Execution Block -->
     <script type="module">
         // Import libcurl.js from a public unpkg CDN path to bypass server root location conflicts
-        import { Libcurl } from 'https://unpkg.com';
+        import { Libcurl } from 'https://fastly.jsdelivr.net/npm/libcurl.js@latest/libcurl_full.js';
 
         // DOM Element Declarations
         const canvas = document.getElementById('particle-canvas');
@@ -304,7 +304,7 @@
         const settingsSave = document.getElementById('settings-save');
 
         // State variables
-        let currentWispServer = localStorage.getItem('vulture_wisp_server') || 'wss://example.com';
+        let currentWispServer = localStorage.getItem('vulture_wisp_server') || 'wss://wisp.mercurywork.shop';
         let historyStack = [];
         let historyIndex = -1;
         let particles = [];
@@ -374,7 +374,7 @@
 
             try {
                 // Initialize the libcurl instance pointing to the matching CDN WebAssembly binary asset path
-                const curl = new Libcurl({ wasmPath: 'https://unpkg.com' });
+                const curl = new Libcurl({ wasmPath: 'https://fastly.jsdelivr.net/npm/libcurl.js@latest/libcurl.wasm' });
                 
                 // Establish connection topology via configured WebSocket Wisp server
                 await curl.connectWisp(currentWispServer);
