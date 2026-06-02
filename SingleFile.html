@@ -229,7 +229,6 @@
             z-index: 99;
         }
     </style>
-    <!-- Loads libcurl.js layout directly inside window header context -->
     <script src="./libcurl.js"></script>
 </head>
 <body>
@@ -273,7 +272,7 @@
             <button class="btn btn-primary" id="settings-save">Save changes</button>
         </div>
     </div>
-    <script>
+        <script>
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         const dashboard = document.getElementById('dashboard');
@@ -294,24 +293,29 @@
         let historyStack = [];
         let historyIndex = -1;
         let particles = [];
+        let engineReady = false;
 
-        // Initialize libcurl.js endpoint mapping
-        function configureWispEngine(url) {
-            // Note: libcurl.js requires a trailing slash on the WebSocket configuration
-            const targetUrl = url.endsWith('/') ? url : url + '/';
+        // Fully compiles the libcurl WebAssembly stack into browser window context
+        async function bootWispEngine(wispUrl) {
             try {
-                libcurl.set_websocket(targetUrl);
-                console.log("[libcurl.js] WebAssembly Proxy routing set to:", targetUrl);
+                console.log("[Vulture WebAssembly] Spinning up network drivers...");
+                const cleanUrl = wispUrl.endsWith('/') ? wispUrl : wispUrl + '/';
+                
+                // Triggers structural initialization properties on libcurl
+                await window.libcurl.load_wasm();
+                window.libcurl.set_websocket(cleanUrl);
+                
+                engineReady = true;
+                console.log("[Vulture WebAssembly] Active connection to:", cleanUrl);
             } catch (err) {
-                console.error("[libcurl.js init failure]:", err);
+                console.error("[Vulture WebAssembly Crash]:", err);
             }
         }
 
         window.addEventListener('load', () => {
-            configureWispEngine(currentWispServer);
+            bootWispEngine(currentWispServer);
         });
 
-        // Background Particle Loop Canvas
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -359,7 +363,7 @@
         initParticles();
         animateParticles();
 
-        // libcurl.js Core Request Pipeline (No Service Worker Needed!)
+        // High-Performance Object Compiler Pipeline
         async function navigate(targetUrl) {
             if (!targetUrl) return;
             
@@ -371,21 +375,30 @@
             viewport.style.display = 'block';
             urlField.value = targetUrl;
 
+            // Stall routing attempts if the connection hasn't completed handshake configurations
+            if (!engineReady) {
+                console.log("[Vulture Engine] Awaiting backend driver synchronization...");
+                await bootWispEngine(currentWispServer);
+            }
+
             try {
-                console.log(`[libcurl.js] Fetching stream for: ${targetUrl}`);
+                console.log(`[libcurl] Fetching transport payload for: ${targetUrl}`);
                 
-                // Fetch the web markup securely inside WebAssembly
-                const response = await libcurl.fetch(targetUrl);
+                const response = await window.libcurl.fetch(targetUrl);
                 const htmlText = await response.text();
 
-                // Inject the raw HTML layout securely as a Data URI to force immediate iframe rendering
-                viewport.src = "data:text/html;charset=utf-8," + encodeURIComponent(htmlText);
+                // Pack the response into an isolated binary Blob container
+                const blob = new Blob([htmlText], { type: 'text/html; charset=utf-8' });
+                const blobUrl = URL.createObjectURL(blob);
+                
+                // Flush the object URL into the frame pipeline
+                viewport.src = blobUrl;
                 
                 trackHistory(targetUrl);
                 updateNavButtons();
             } catch (err) {
-                console.error("Tunnel execution stalled:", err);
-                viewport.src = "data:text/html,⚙️ Connection stalled or WISP Server offline.";
+                console.error("Tunnel error:", err);
+                viewport.src = "data:text/html,<body style='background:#0a0a0c;color:#e4e4e7;padding:20px;font-family:sans-serif;'><h3>⚠️ Connection Interrupted</h3><p>" + err.message + "</p></body>";
             }
         }
 
@@ -423,16 +436,14 @@
         backBtn.addEventListener('click', () => {
             if (historyIndex > 0) {
                 historyIndex--;
-                const prevUrl = historyStack[historyIndex];
-                navigate(prevUrl);
+                navigate(historyStack[historyIndex]);
             }
         });
 
         forwardBtn.addEventListener('click', () => {
             if (historyIndex < historyStack.length - 1) {
                 historyIndex++;
-                const nextUrl = historyStack[historyIndex];
-                navigate(nextUrl);
+                navigate(historyStack[historyIndex]);
             }
         });
 
@@ -457,7 +468,7 @@
         settingsClose.addEventListener('click', closeModal);
         modalOverlay.addEventListener('click', closeModal);
 
-        settingsSave.addEventListener('click', () => {
+        settingsSave.addEventListener('click', async () => {
             let newWisp = wispInput.value.trim();
             if (newWisp) {
                 if (!newWisp.startsWith('ws://') && !newWisp.startsWith('wss://')) {
@@ -465,8 +476,10 @@
                 }
                 currentWispServer = newWisp;
                 localStorage.setItem('vulture_wisp_server', currentWispServer);
-                configureWispEngine(currentWispServer);
-                alert('Vulture WISP Hot-swapped successfully via libcurl.js!');
+                
+                engineReady = false;
+                await bootWispEngine(currentWispServer);
+                alert('Vulture WISP Hot-swapped successfully!');
             }
             closeModal();
         });
