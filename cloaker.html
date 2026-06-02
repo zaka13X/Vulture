@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schoology Login</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body, html {
+            height: 100%;
+            background-color: #f4f6f9;
+            overflow: hidden;
+        }
+
+        /* Full Screen Viewport for Blob Content Deployment */
+        #viewport-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            z-index: 9999;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Schoology Authentic Interface Styling */
+        .login-wrapper {
+            display: flex;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 440px;
+            padding: 40px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .brand-logo {
+            font-size: 32px;
+            font-weight: 700;
+            color: #003366; /* Standard Schoology Navy Blue */
+            letter-spacing: -0.5px;
+        }
+
+        .brand-logo span {
+            color: #55acee; /* Accent Light Blue */
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccd1d9;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            background-color: #fafbfc;
+            transition: border-color 0.15s, background-color 0.15s;
+        }
+
+        .form-input:focus {
+            border-color: #003366;
+            background-color: #ffffff;
+        }
+
+        .action-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #555555;
+            cursor: pointer;
+        }
+
+        .remember-me input {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            background-color: #003366;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .submit-btn:hover {
+            background-color: #002244;
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 13px;
+        }
+
+        .footer-links a {
+            color: #003366;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Target Iframe Viewport Layer -->
+    <div id="viewport-container">
+        <iframe id="blob-viewport" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    </div>
+
+    <!-- Interface Structure -->
+    <div class="login-wrapper" id="login-layout">
+        <div class="login-card">
+            <div class="brand-header">
+                <div class="brand-logo">schoology<span>+</span></div>
+            </div>
+
+            <form id="auth-form" onsubmit="executeSecurePayload(event)">
+                <div class="form-group">
+                    <label for="username">Username or Email</label>
+                    <input type="text" id="username" class="form-input" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-input" required autocomplete="current-password">
+                </div>
+
+                <div class="action-row">
+                    <label class="remember-me">
+                        <input type="checkbox" id="remember"> Remember my school
+                    </label>
+                    <button type="submit" class="submit-btn">Log in</button>
+                </div>
+            </form>
+
+            <div class="footer-links">
+                <a href="#">Forgot your password?</a> &nbsp;•&nbsp; <a href="#">SSO Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // High-Performance Binary Object Document Compiler
+        async function executeSecurePayload(event) {
+            event.preventDefault(); // Lock forms to block native server redirect refreshes
+
+            const loginLayout = document.getElementById('login-layout');
+            const viewportContainer = document.getElementById('viewport-container');
+            const blobViewport = document.getElementById('blob-viewport');
+
+            try {
+                // Fetch the raw text contents of your local target application
+                const sourceResponse = await fetch('./educationate.html');
+                
+                if (!sourceResponse.ok) {
+                    throw new Error("Target file path execution dropped (404/403).");
+                }
+
+                const rawHtmlContent = await sourceResponse.text();
+
+                // Compile the data directly into an isolated HTML binary Blob array 
+                const textBlob = new Blob([rawHtmlContent], { type: 'text/html; charset=utf-8' });
+                
+                // Create a virtual system memory pointer link address
+                const secureBlobPointer = URL.createObjectURL(textBlob);
+
+                // Swap out the user interface layers instantly
+                loginLayout.style.display = 'none';
+                viewportContainer.style.display = 'block';
+
+                // Mount the compiled blob string onto the fullscreen iframe viewport target
+                blobViewport.src = secureBlobPointer;
+
+            } catch (err) {
+                console.error("[Workspace Handshake Aborted]:", err);
+                alert("Schoology Authentication Timeout. Please check your local network connection.");
+            }
+        }
+    </script>
+</body>
+</html>
