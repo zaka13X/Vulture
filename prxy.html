@@ -229,7 +229,7 @@
             z-index: 99;
         }
     </style>
-    <!-- Critical core library script dependency -->
+    <!-- Directly attach libraries in head to stop execution lag blocks -->
     <script src="./bare.js"></script>
 </head>
 <body>
@@ -295,42 +295,32 @@
         let historyIndex = -1;
         let particles = [];
 
-        // Establish the shared connection pipeline to your local bare.worker.js asset file
+        // Core Fix: Register connection handler using standard constructor structures
         const bareMuxConn = new BareMux.BareMuxConnection("./bare.worker.js");
 
         async function initNetworkTransport(wispUrlTarget) {
             try {
-                console.log("[Vulture WebAssembly Sync] Initializing WISP Node:", wispUrlTarget);
-                // Bind the Epoxy bundle and register your active server routing configuration parameters
+                console.log("[Vulture Engine] Broadbasting Transport Configuration Target:", wispUrlTarget);
                 await bareMuxConn.setTransport("./epoxy.min.js", [{ wisp: wispUrlTarget }]);
-                console.log("[Vulture WebAssembly Sync] Transport tunnel confirmed online.");
             } catch (err) {
-                console.error("[Vulture WebAssembly Sync Failure]:", err);
-                throw err; // Escalate error to intercept the navigational loop if configuration drops
+                console.error("[Vulture Sync Error]:", err);
             }
         }
 
-        // 1. Unified App Engine Initialization
         window.addEventListener('load', async () => {
-            // Setup the underlying client transport configuration handshake parameters first
-            try {
-                await initNetworkTransport(currentWispServer);
-            } catch (e) {
-                console.warn("[Initial Setup Warning] Connection mapping deferred.");
-            }
+            await initNetworkTransport(currentWispServer);
 
-            // Register the standard page routing intercept hooks via the primary service worker file
             if ('serviceWorker' in navigator) {
                 try {
+                    // Scope specifically locked to application context parameters
                     const registration = await navigator.serviceWorker.register('./worker.js', { scope: './' });
-                    console.log('Vulture Network Service Worker mapped successfully:', registration.scope);
+                    console.log('Vulture Service Worker Interceptor Active:', registration.scope);
                 } catch (error) {
-                    console.error('Service Worker baseline installation dropped:', error);
+                    console.error('Service Worker Registration Aborted:', error);
                 }
             }
         });
 
-        // 2. Interactive Backdrop Animation Canvas
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -378,7 +368,6 @@
         initParticles();
         animateParticles();
 
-        // 3. Asynchronous Safe Navigation Pipeline Core
         async function navigate(targetUrl) {
             if (!targetUrl) return;
             
@@ -391,17 +380,16 @@
             urlField.value = targetUrl;
 
             try {
-                // CRITICAL TIMING FIX: Await the active handshake parameter compilation before firing requests 
+                // Ensure backend initialization state is flushed completely before swapping src properties
                 await initNetworkTransport(currentWispServer);
                 
-                // Pack the base64 route parameters cleanly and update the iframe payload target
                 const proxyScopedUrl = `./vulture-service/${btoa(targetUrl)}`;
                 viewport.src = proxyScopedUrl;
                 
                 trackHistory(targetUrl);
                 updateNavButtons();
             } catch (err) {
-                console.error("Navigation Pipe Intercept Failed:", err);
+                console.error("Pipeline Sync Intercept Dropped:", err);
             }
         }
 
@@ -463,7 +451,6 @@
             viewport.src = 'about:blank';
         });
 
-        // 4. Settings Overlay Modal Interactions
         settingsBtn.addEventListener('click', () => {
             wispInput.value = currentWispServer;
             settingsModal.style.display = 'block';
@@ -487,10 +474,8 @@
                 
                 currentWispServer = newWisp;
                 localStorage.setItem('vulture_wisp_server', currentWispServer);
-                
-                // Directly hot-swap and reset the active network transport initialization on configuration save
                 await initNetworkTransport(currentWispServer);
-                alert('Vulture Network WISP Routing configuration updated and hot-swapped!');
+                alert('Vulture WISP Routing configuration updated and hot-swapped!');
             }
             closeModal();
         });
