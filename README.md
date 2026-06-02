@@ -1,1 +1,1 @@
-.
+Vulture is a static web proxy, powered by service workers, - Its still in beta meaning that alot of website will flat out refuse to even load, and for the Service Workers to load this has to be on a https:// site or localhost.
