@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>about:blank#blocked</title>
+    <title>Vulture Workspace</title>
     <style>
         :root {
             --bg-color: #0a0a0c;
@@ -242,7 +242,6 @@
     <canvas id="particle-canvas"></canvas>
 
     <div class="browser-container">
-        <!-- Navigation Controls -->
         <nav class="nav-bar">
             <div class="nav-buttons">
                 <button class="nav-btn" id="back-btn">←</button>
@@ -255,10 +254,9 @@
                 <button class="nav-btn" id="refresh-btn">⟳</button>
             </div>
 
-            <button class="nav-btn" id="settings-btn"></button>
+            <button class="nav-btn" id="settings-btn">⚙</button>
         </nav>
 
-        <!-- Web Content Display -->
         <main class="content-area">
             <div class="new-tab-screen" id="dashboard">
                 <h1 class="brand-title">Vulture</h1>
@@ -267,9 +265,7 @@
             <iframe id="browser-viewport" class="tab-view" src="about:blank"></iframe>
         </main>
     </div>
-
-    <!-- Configuration Modal -->
-    <div class="overlay" id="modal-overlay"></div>
+        <div class="overlay" id="modal-overlay"></div>
     <div class="modal" id="settings-modal">
         <h2 class="modal-header">Vulture Configuration</h2>
         <div class="form-group">
@@ -281,38 +277,59 @@
             <button class="btn btn-primary" id="settings-save">Save changes</button>
         </div>
     </div>
-    <!-- Script Execution Block -->
-    <script type="module">
-        // Import libcurl.js runtime scripts from the local path requirements
-        // Note: Actual functional runtime logic depends on the specific libcurl.js port interface used
-        import { Libcurl } from './libcurl.js';
 
-        // State variables
-        let currentWispServer = localStorage.getItem('vulture_wisp_server') || 'wss://wisp.mercurywork.shop';
-        const historyStack = [];
-        let historyIndex = -1;
-
-        // Core UI References
-        const urlField = document.getElementById('url-field');
-        const viewport = document.getElementById('browser-viewport');
+    <script>
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
         const dashboard = document.getElementById('dashboard');
+        const viewport = document.getElementById('browser-viewport');
+        const urlField = document.getElementById('url-field');
+        const refreshBtn = document.getElementById('refresh-btn');
         const backBtn = document.getElementById('back-btn');
         const forwardBtn = document.getElementById('forward-btn');
-        const refreshBtn = document.getElementById('refresh-btn');
         const homeBtn = document.getElementById('home-btn');
-        
-        // Modal UI References
         const settingsBtn = document.getElementById('settings-btn');
         const settingsModal = document.getElementById('settings-modal');
         const modalOverlay = document.getElementById('modal-overlay');
         const wispInput = document.getElementById('wisp-url');
-        const settingsSave = document.getElementById('settings-save');
         const settingsClose = document.getElementById('settings-close');
+        const settingsSave = document.getElementById('settings-save');
 
-        // Dark Blue Particle System Engine
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
+        let currentWispServer = localStorage.getItem('vulture_wisp_server') || 'wss://://example.com';
+        let historyStack = [];
+        let historyIndex = -1;
         let particles = [];
+
+        // 1. Service Worker Initialization Engine
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    // Registers your standalone worker.js module file in the root scope
+                    const registration = await navigator.serviceWorker.register('./worker.js', { scope: './' });
+                    console.log('Vulture Network Service Worker mapped successfully:', registration.scope);
+                    
+                    // Synchronize the current Wisp configuration endpoint down to the running worker thread
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({
+                            type: 'SET_WISP_SERVER',
+                            url: currentWispServer
+                        });
+                    }
+                } catch (error) {
+                    console.error('Service Worker baseline installation dropped:', error);
+                }
+            });
+
+            // Handle spontaneous re-controllers
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        type: 'SET_WISP_SERVER',
+                        url: currentWispServer
+                    });
+                }
+            });
+        }
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -355,20 +372,16 @@
 
         function animateParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
+            particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animateParticles);
         }
         initParticles();
         animateParticles();
 
-        // Browser Navigation Operations
+        // Safe Navigation Pipeline Runtime
         async function navigate(targetUrl) {
             if (!targetUrl) return;
             
-            // Basic structural sanitization
             if (!/^https?:\/\//i.test(targetUrl)) {
                 targetUrl = 'https://' + targetUrl;
             }
@@ -377,39 +390,20 @@
             viewport.style.display = 'block';
             urlField.value = targetUrl;
 
-            try {
-                // Initialize the libcurl instance pointing to the requested WebAssembly asset path
-                const curl = new Libcurl({ wasmPath: '/libcurl.wasm' });
-                
-                // Establish connection topology via configured WebSocket Wisp server
-                await curl.connectWisp(currentWispServer);
-                
-                // Request the resource using the proxy stack
-                const response = await curl.fetch(targetUrl, {
-                    method: 'GET',
-                    redirect: 'follow' // Native handling for cross-origin redirects
-                });
-
-                if (response.status >= 200 && response.status < 400) {
-                    const blobData = await response.blob();
-                    const objectUrl = URL.createObjectURL(blobData);
-                    
-                    viewport.src = objectUrl;
-
-                    // History tracking administration
-                    if (historyIndex === -1 || historyStack[historyIndex] !== targetUrl) {
-                        historyStack.splice(historyIndex + 1);
-                        historyStack.push(targetUrl);
-                        historyIndex++;
-                    }
-                } else {
-                    throw new Error('Unresolved server status code');
-                }
-            } catch (error) {
-                console.error('Proxy routing exception:', error);
-                viewport.src = 'error.html';
-            }
+            // Structure the target request context path through our registered Service Worker scope prefix
+            const proxyScopedUrl = `./vulture-service/${btoa(targetUrl)}`;
+            viewport.src = proxyScopedUrl;
+            
+            trackHistory(targetUrl);
             updateNavButtons();
+        }
+
+        function trackHistory(url) {
+            if (historyIndex === -1 || historyStack[historyIndex] !== url) {
+                historyStack.splice(historyIndex + 1);
+                historyStack.push(url);
+                historyIndex++;
+            }
         }
 
         function updateNavButtons() {
@@ -417,7 +411,6 @@
             forwardBtn.style.opacity = historyIndex < historyStack.length - 1 ? '1' : '0.4';
         }
 
-        // Event Interceptors
         urlField.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') navigate(urlField.value);
         });
@@ -447,7 +440,6 @@
             urlField.value = '';
         });
 
-        // Settings View Model Bindings
         settingsBtn.addEventListener('click', () => {
             wispInput.value = currentWispServer;
             settingsModal.style.display = 'block';
@@ -466,6 +458,13 @@
             currentWispServer = wispInput.value;
             localStorage.setItem('vulture_wisp_server', currentWispServer);
             closeSettings();
+            
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'SET_WISP_SERVER',
+                    url: currentWispServer
+                });
+            }
             if (historyIndex >= 0) navigate(historyStack[historyIndex]);
         });
 
