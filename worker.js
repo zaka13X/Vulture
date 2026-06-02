@@ -10,7 +10,6 @@ self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // Context A: Core navigational routing containing the base64 chunk
     if (url.pathname.includes(PROXY_PREFIX)) {
         const parts = url.pathname.split(PROXY_PREFIX);
         const base64Part = parts[parts.length - 1]; 
@@ -19,7 +18,7 @@ self.addEventListener('fetch', (event) => {
             try {
                 const targetUrl = atob(base64Part);
                 const parsedTarget = new URL(targetUrl);
-                lastKnownOrigin = parsedTarget.origin; // Cache root origin to repair relative sub-assets
+                lastKnownOrigin = parsedTarget.origin;
 
                 event.respondWith(handleTunnelRequest(event.request, targetUrl));
             } catch (err) {
@@ -32,7 +31,6 @@ self.addEventListener('fetch', (event) => {
             }
         }
     } 
-    // Context B: Intercept and patch relative website assets escaping the base64 prefix
     else if (lastKnownOrigin && !url.hostname.includes('github.io') && !url.hostname.includes('localhost')) {
         const correctedUrl = lastKnownOrigin + url.pathname + url.search;
         event.respondWith(handleTunnelRequest(event.request, correctedUrl));
@@ -46,7 +44,6 @@ async function handleTunnelRequest(request, targetUrl) {
             requestHeaders[key] = value;
         }
 
-        // Execute streaming proxy fetch over the active WebAssembly link channel
         const response = await bareClient.fetch(targetUrl, {
             method: request.method,
             headers: requestHeaders,
@@ -54,12 +51,30 @@ async function handleTunnelRequest(request, targetUrl) {
             redirect: 'manual'
         });
 
-        return response;
+        // Extract binary response array buffers cleanly
+        const rawBody = await response.arrayBuffer();
+        const responseHeaders = new Headers();
+        
+        for (const [key, value] of response.headers.entries()) {
+            responseHeaders.set(key, value);
+        }
+
+        // Core Fix: Force Content-Type to text/html to unlock the iframe renderer layout pipeline
+        if (targetUrl.endsWith('.html') || !targetUrl.includes('.')) {
+            responseHeaders.set('Content-Type', 'text/html; charset=UTF-8');
+        }
+
+        return new Response(rawBody, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: responseHeaders
+        });
+
     } catch (error) {
         console.error("[Tunnel Intercept Failure]:", error);
         return new Response(`Vulture Engine Block: ${error.message}`, { 
             status: 502,
-            headers: { 'Content-Type': 'text/plain' }
+            headers: { 'Content-Type': 'text/html' }
         });
     }
 }
